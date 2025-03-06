@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { NLPService } from '../services/nlp.service';
 import { ERROR_MESSAGES } from '../utils/errorMessages';
+import { NLPService } from '../services/nlp.service';
 
 export class NLPController {
   // Endpoint para obtener todos los análisis de un jugador
@@ -25,17 +25,24 @@ export class NLPController {
   static async createAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { player_id, fuente, texto } = req.body;
 
+    // Validación de campos
     if (!player_id || !fuente || !texto) {
       res.status(400).json({ message: ERROR_MESSAGES.MISSING_FIELDS });
-      return Promise.resolve();
+      return; // No necesitas usar Promise.resolve(), Express maneja la respuesta
     }
 
     try {
+      // Llamamos al servicio NLPService para analizar el texto
       const analysis = await NLPService.analyzeText(player_id, fuente, texto);
-      res.status(201).json(analysis);
+
+      // En este caso, asumimos que `analyzeText` devuelve el análisis completado
+      res.status(201).json({
+        message: 'Análisis creado correctamente',
+        analysis: analysis, // Devolvemos los datos del análisis
+      });
     } catch (error) {
       console.error(error);
-      next(error);
+      next(error);  // Delega al manejador de errores global
     }
   }
 

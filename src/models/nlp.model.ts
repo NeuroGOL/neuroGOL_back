@@ -5,5 +5,6 @@ export interface NLPAnalysis {
   texto: string; // Texto analizado
   emocion_detectada: string; // "Felicidad", "Ansiedad", "Ira", etc.
   confianza: number; // Valor entre 0 y 1
+  analisis: string; // Resultado del análisis
   created_at?: Date;
 }

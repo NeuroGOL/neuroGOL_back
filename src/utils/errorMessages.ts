@@ -50,5 +50,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'Correo o contraseña incorrectos',
   REGISTRATION_ERROR: 'Error registrando usuario',
   LOGIN_ERROR: 'Error iniciando sesión',
-  UNKNOWN_ERROR: 'Ocurrió un error desconocido'
+  UNKNOWN_ERROR: 'Ocurrió un error desconocido',
+
+  OPENAI_QUOTA_EXCEEDED: 'Has superado tu cuota actual en OpenAI. Por favor, revisa tu plan y detalles de facturación.',
 };

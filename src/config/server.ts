@@ -5,8 +5,9 @@ import userRoutes from '../routes/user.routes';
 import roleRoutes from '../routes/role.routes';
 import playerRoutes from '../routes/player.routes';
 import reportRoutes from '../routes/report.routes';
-import nlpRoutes from '../routes/nlp.routes';
 import { errorHandler } from '../middleware/errorHandler';
+import analysisRoutes from '../routes/analysis.routes';
+import nplAnalysisRoutes from '../routes/nlp_analysis.routes';
 
 const app = express();
 
@@ -19,10 +20,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/players', playerRoutes);
+app.use('/api/analysis', analysisRoutes)
 app.use('/api/reports', reportRoutes);
-app.use('/api/nlp', nlpRoutes);
+app.use('/api/nlp', nplAnalysisRoutes);
 
-// Middleware de manejo de errores (¡Siempre al final!)
+// Middleware de manejo de errores
 app.use(errorHandler);
 
 export default app;

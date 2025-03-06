@@ -26,20 +26,15 @@ export const ERROR_MESSAGES: Record<string, string> = {
   UPDATE_PLAYER_ERROR: 'Error actualizando jugador',
   DELETE_PLAYER_ERROR: 'Error eliminando jugador',
 
-  GET_EMOTIONS_ERROR: 'Error obteniendo emociones',
-  EMOTION_NOT_FOUND: 'Emoción no encontrada',
-  CREATE_EMOTION_ERROR: 'Error creando emoción',
-  DELETE_EMOTION_ERROR: 'Error eliminando emoción',
-
   GET_REPORTS_ERROR: 'Error obteniendo reportes',
   REPORT_NOT_FOUND: 'Reporte no encontrado',
   CREATE_REPORT_ERROR: 'Error creando reporte',
   DELETE_REPORT_ERROR: 'Error eliminando reporte',
 
-  GET_NLP_ERROR: 'Error obteniendo análisis de texto',
-  NLP_NOT_FOUND: 'Análisis de texto no encontrado',
-  CREATE_NLP_ERROR: 'Error creando análisis de texto',
-  DELETE_NLP_ERROR: 'Error eliminando análisis de texto',
+  GET_NLP_ANALYSIS_ERROR: 'Error obteniendo análisis NLP',
+  NLP_ANALYSIS_NOT_FOUND: 'Análisis NLP no encontrado',
+  CREATE_NLP_ANALYSIS_ERROR: 'Error creando análisis NLP',
+  DELETE_NLP_ANALYSIS_ERROR: 'Error eliminando análisis NLP',
 
   GET_AI_MODELS_ERROR: 'Error obteniendo predicciones de IA',
   AI_MODEL_NOT_FOUND: 'Predicción de IA no encontrada',
@@ -51,6 +46,14 @@ export const ERROR_MESSAGES: Record<string, string> = {
   REGISTRATION_ERROR: 'Error registrando usuario',
   LOGIN_ERROR: 'Error iniciando sesión',
   UNKNOWN_ERROR: 'Ocurrió un error desconocido',
+
+  ANALYSIS_NOT_FOUND: 'Análisis no encontrado',
+  ANALYSIS_TEXT_NOT_FOUND: "El análisis seleccionado no tiene texto válido para procesar.",
+  INVALID_ANALYSIS: 'Análisis inválido',
+  CREATE_ANALYSIS_ERROR: 'Error creando análisis',
+  UPDATE_ANALYSIS_ERROR: 'Error actualizando análisis',
+  DELETE_ANALYSIS_ERROR: 'Error eliminando análisis',
+
 
   OPENAI_QUOTA_EXCEEDED: 'Has superado tu cuota actual en OpenAI. Por favor, revisa tu plan y detalles de facturación.',
 };

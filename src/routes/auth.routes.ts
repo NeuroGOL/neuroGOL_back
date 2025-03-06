@@ -2,19 +2,18 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { validateRequest } from '../middleware/validateRequest';
 import { body } from 'express-validator';
-import { ERROR_MESSAGES } from '../utils/errorMessages';
 
 const router = Router();
 
 router.post(
   '/register',
   [
-    body('nombre').isString().isLength({ min: 3 }).withMessage(ERROR_MESSAGES.NAME_TOO_SHORT),
-    body('email').isEmail().withMessage(ERROR_MESSAGES.INVALID_EMAIL),
-    body('contrasena').isLength({ min: 6 }).withMessage(ERROR_MESSAGES.PASSWORD_TOO_SHORT),
-    body('role_id').isInt().withMessage(ERROR_MESSAGES.INVALID_ROLE),
+    body('nombre').isString().isLength({ min: 3 }).withMessage('El nombre debe tener al menos 3 caracteres'),
+    body('email').isEmail().withMessage('Debe ser un email válido'),
+    body('contrasena').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
+    body('role_id').isInt().withMessage('Debe proporcionar un rol válido'),
     body('profile_picture').optional().isURL().withMessage('Debe ser una URL válida'),
-    validateRequest
+    validateRequest 
   ],
   AuthController.register
 );
@@ -22,8 +21,8 @@ router.post(
 router.post(
   '/login',
   [
-    body('email').isEmail().withMessage(ERROR_MESSAGES.INVALID_EMAIL),
-    body('contrasena').isString().withMessage(ERROR_MESSAGES.PASSWORD_TOO_SHORT),
+    body('email').isEmail().withMessage('Debe ser un email válido'),
+    body('contrasena').isString().withMessage('Debe ingresar una contraseña'),
     validateRequest
   ],
   AuthController.login

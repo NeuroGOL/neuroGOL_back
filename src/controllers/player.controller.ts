@@ -1,19 +1,18 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { PlayerService } from '../services/player.service';
 import { ERROR_MESSAGES } from '../utils/errorMessages';
 
 export class PlayerController {
-  static async getAllPlayers(req: Request, res: Response): Promise<void> {
+  static async getAllPlayers(req: Request, res: Response, next: NextFunction) {
     try {
       const players = await PlayerService.getAllPlayers();
       res.json(players);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.GET_PLAYERS_ERROR });
+      next(error);
     }
   }
 
-  static async getPlayerById(req: Request, res: Response): Promise<void> {
+  static async getPlayerById(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const player = await PlayerService.getPlayerById(Number(id));
@@ -25,22 +24,20 @@ export class PlayerController {
 
       res.json(player);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.GET_PLAYERS_ERROR });
+      next(error);
     }
   }
 
-  static async createPlayer(req: Request, res: Response): Promise<void> {
+  static async createPlayer(req: Request, res: Response, next: NextFunction) {
     try {
       const newPlayer = await PlayerService.createPlayer(req.body);
       res.status(201).json(newPlayer);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.CREATE_PLAYER_ERROR });
+      next(error);
     }
   }
 
-  static async updatePlayer(req: Request, res: Response): Promise<void> {
+  static async updatePlayer(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const updatedPlayer = await PlayerService.updatePlayer(Number(id), req.body);
@@ -52,12 +49,11 @@ export class PlayerController {
 
       res.json(updatedPlayer);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.UPDATE_PLAYER_ERROR });
+      next(error);
     }
   }
 
-  static async deletePlayer(req: Request, res: Response): Promise<void> {
+  static async deletePlayer(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const deleted = await PlayerService.deletePlayer(Number(id));
@@ -69,8 +65,7 @@ export class PlayerController {
 
       res.json({ message: 'Jugador eliminado correctamente' });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.DELETE_PLAYER_ERROR });
+      next(error);
     }
   }
 }

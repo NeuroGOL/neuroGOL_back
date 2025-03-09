@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ReportService } from '../services/report.service';
 import { ERROR_MESSAGES } from '../utils/errorMessages';
+import { pool } from '../config/db';
 
 export class ReportController {
   /**
@@ -36,17 +37,21 @@ export class ReportController {
   /**
    * Generar un reporte automáticamente basándose en el último `analysis` y `nlp_analysis` del jugador.
    */
-  static async generateReport(req: Request, res: Response, next: NextFunction): Promise<Response | any> {
+  static async generateReport(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { player_id, generado_por } = req.body;
-
+  
       // Verifica que los datos requeridos estén presentes
       if (!player_id || !generado_por) {
-        return res.status(400).json({ message: ERROR_MESSAGES.MISSING_PARAMETERS });
+        res.status(400).json({ message: ERROR_MESSAGES.MISSING_PARAMETERS });
+        return;
       }
-
-      const newReport = await ReportService.generateReport(player_id, generado_por);
-      return res.status(201).json(newReport); // ✅ Agregamos return aquí
+  
+      // Llamar al servicio para generar el reporte
+      const newReport = await ReportService.generateReport(Number(player_id), Number(generado_por));
+  
+      // Devolver el reporte generado o el existente
+      res.status(201).json(newReport);
     } catch (error) {
       next(error);
     }

@@ -7,21 +7,33 @@ const genAI = new GoogleGenerativeAI(process.env.GENERIC_API_KEY!);
 
 export class NLPAnalysisService {
   static async getAllNLPAnalysis(): Promise<NLPAnalysis[]> {
-    const result = await pool.query('SELECT * FROM nlp_analysis ORDER BY created_at DESC');
-    return result.rows;
+    try {
+      const result = await pool.query('SELECT * FROM nlp_analysis ORDER BY created_at DESC');
+      return result.rows;
+    } catch (error) {
+      console.error('Error obteniendo análisis NLP:', error);
+      throw new Error(ERROR_MESSAGES.GET_NLP_ERROR);
+    }
   }
 
   static async getNLPAnalysisById(id: number): Promise<NLPAnalysis | null> {
-    const result = await pool.query('SELECT * FROM nlp_analysis WHERE id = $1', [id]);
-    return result.rows[0] || null;
+    try {
+      if (!id || isNaN(id)) throw new Error(ERROR_MESSAGES.INVALID_ID);
+
+      const result = await pool.query('SELECT * FROM nlp_analysis WHERE id = $1', [id]);
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error obteniendo análisis NLP por ID:', error);
+      throw new Error(ERROR_MESSAGES.NLP_NOT_FOUND);
+    }
   }
 
   static async createNLPAnalysis(analysis_id: number): Promise<NLPAnalysis> {
     try {
-      // 🔹 Obtener el texto desde el analysis_id
-      const analysisResult = await pool.query(
-        `SELECT texto FROM analysis WHERE id = $1`, [analysis_id]
-      );
+      if (!analysis_id || isNaN(analysis_id)) throw new Error(ERROR_MESSAGES.INVALID_ID);
+
+      // 🔹 Obtener el texto desde el `analysis_id`
+      const analysisResult = await pool.query('SELECT texto FROM analysis WHERE id = $1', [analysis_id]);
 
       if (analysisResult.rowCount === 0) {
         throw new Error(ERROR_MESSAGES.ANALYSIS_NOT_FOUND);
@@ -29,14 +41,14 @@ export class NLPAnalysisService {
 
       const texto = analysisResult.rows[0].texto;
 
-      // 🔹 Verificar que el texto no sea undefined o vacío
-      if (!texto || texto.trim() === "") {
+      // 🔹 Verificar que el texto no sea vacío o undefined
+      if (!texto || texto.trim() === '') {
         throw new Error(ERROR_MESSAGES.ANALYSIS_TEXT_NOT_FOUND);
       }
 
       // 🔹 Enviar el texto real a la IA para análisis
-      const emocion_detectada = await this.analyzeEmotionWithGemini(texto);
-      const nlpResults = await this.generateDetailedAnalysisWithGemini(texto, emocion_detectada);
+      const emocion_detectada = await NLPAnalysisService.analyzeEmotionWithGemini(texto);
+      const nlpResults = await NLPAnalysisService.generateDetailedAnalysisWithGemini(texto, emocion_detectada);
 
       const result = await pool.query(
         `INSERT INTO nlp_analysis (analysis_id, emocion_detectada, tendencia_emocional, impacto_en_rendimiento, 
@@ -51,60 +63,70 @@ export class NLPAnalysisService {
 
       return result.rows[0];
     } catch (error) {
-      console.error('Error al crear el análisis NLP:', error);
-      throw new Error(ERROR_MESSAGES.NLP_ANALYSIS_FAILED);
+      console.error('Error creando análisis NLP:', error);
+      throw new Error(ERROR_MESSAGES.CREATE_NLP_ERROR);
     }
   }
 
   static async deleteNLPAnalysis(id: number): Promise<boolean> {
-    const result = await pool.query('DELETE FROM nlp_analysis WHERE id = $1 RETURNING id', [id]);
-    return result.rowCount !== null && result.rowCount > 0;
+    try {
+      if (!id || isNaN(id)) throw new Error(ERROR_MESSAGES.INVALID_ID);
+
+      // 🔹 Verificar si el análisis NLP existe antes de eliminar
+      const nlpExists = await pool.query('SELECT id FROM nlp_analysis WHERE id = $1', [id]);
+      if (nlpExists.rowCount === 0) {
+        throw new Error(ERROR_MESSAGES.NLP_NOT_FOUND);
+      }
+
+      const result = await pool.query('DELETE FROM nlp_analysis WHERE id = $1 RETURNING id', [id]);
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error eliminando análisis NLP:', error);
+      throw new Error(ERROR_MESSAGES.DELETE_NLP_ERROR);
+    }
   }
 
-  private static async analyzeEmotionWithGemini(text: string): Promise<string> {
+  // 🔹 Método estático para analizar emociones con Gemini
+  static async analyzeEmotionWithGemini(text: string): Promise<string> {
     try {
-      const prompt = `Detecta la emoción predominante en el siguiente texto: "${text}". Responde solo con la emoción detectada.`;
+      const prompt = `Detecta la emoción predominante en el siguiente texto y responde solo con la emoción detectada: "${text}"`;
 
       const response = await genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }).generateContent(prompt);
       const emotion = response.response.text();
 
-      if (!emotion) throw new Error('No emotion detected');
+      if (!emotion) throw new Error('No se detectó ninguna emoción');
 
       return emotion.trim();
     } catch (error) {
       console.error('Error al analizar emoción con Gemini:', error);
-      throw new Error(ERROR_MESSAGES.GEMINI_ERROR);
+      throw new Error(ERROR_MESSAGES.NLP_ANALYSIS_FAILED);
     }
   }
 
-  private static async generateDetailedAnalysisWithGemini(text: string, emocion_detectada: string) {
+  // 🔹 Método estático para generar análisis detallado con Gemini
+  static async generateDetailedAnalysisWithGemini(text: string, emocion_detectada: string) {
     try {
-      const prompt = `Analiza la siguiente declaración de un jugador de fútbol: "${text}". La emoción detectada es "${emocion_detectada}".  
+      const prompt = `Analiza la siguiente declaración: "${text}". La emoción detectada es "${emocion_detectada}".  
 
-        Devuelve la respuesta en formato JSON con las siguientes claves:
-        {
-          "tendencia_emocional": "Explicación sobre cómo han cambiado las emociones con el tiempo.",
-          "impacto_en_rendimiento": "Positivo / Negativo / Neutro",
-          "impacto_en_equipo": "Positivo / Negativo / Neutro",
-          "estado_actual_emocional": "Estable / Inestable / En riesgo",
-          "rendimiento_predicho": "Alto / Medio / Bajo",
-          "resumen_general": "Resumen detallado del estado emocional del jugador y su posible impacto en el rendimiento.",
-          "acciones_recomendadas": "Recomendaciones para mejorar el estado emocional del jugador."
-        }
+      Devuelve un JSON con las siguientes claves:
+      {
+        "tendencia_emocional": "Describe cómo han cambiado las emociones a lo largo del tiempo.",
+        "impacto_en_rendimiento": "Positivo / Negativo / Neutro",
+        "impacto_en_equipo": "Positivo / Negativo / Neutro",
+        "estado_actual_emocional": "Estable / Inestable / En riesgo",
+        "rendimiento_predicho": "Alto / Medio / Bajo",
+        "resumen_general": "Breve explicación del estado emocional del jugador.",
+        "acciones_recomendadas": "Sugerencias para mejorar el estado emocional del jugador."
+      }
 
-        Responde ÚNICAMENTE con el JSON, sin incluir texto adicional, sin notas, sin \`\`\`json ni \`\`\`.`;
+      Responde solo con el JSON, sin texto adicional.`;
 
-      // Llamada a Gemini para obtener la respuesta
       const response = await genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }).generateContent(prompt);
       let rawText = response.response.text();
 
-      // 🔹 Depuración: Ver la respuesta en consola antes de procesarla
       console.log("Respuesta de Gemini (sin procesar):", rawText);
 
-      // 🔹 Eliminar los posibles triple comillas invertidas (` ```json ` y ` ``` `)
       rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-      // 🔹 Convertir la respuesta limpia a JSON
       const analysis = JSON.parse(rawText);
 
       return {
@@ -118,7 +140,7 @@ export class NLPAnalysisService {
       };
     } catch (error) {
       console.error('Error al generar análisis con Gemini:', error);
-      throw new Error('GEMINI_ERROR');
+      throw new Error(ERROR_MESSAGES.NLP_ANALYSIS_FAILED);
     }
   }
 }

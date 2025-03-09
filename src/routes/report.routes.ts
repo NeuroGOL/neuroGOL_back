@@ -1,11 +1,38 @@
 import { Router } from 'express';
+import { body, param } from 'express-validator';
 import { ReportController } from '../controllers/report.controller';
+import { validateRequest } from '../middleware/validateRequest';
 
 const router = Router();
 
+/** 🔹 Obtener todos los reportes */
 router.get('/', ReportController.getAllReports);
-router.get('/:id', ReportController.getReportById);
-router.post('/', ReportController.generateReport);
-router.delete('/:id', ReportController.deleteReport);
+
+/** 🔹 Obtener un reporte por ID */
+router.get(
+  '/:id',
+  param('id').isInt().withMessage('El ID debe ser un número entero'),
+  validateRequest,
+  ReportController.getReportById
+);
+
+/** 🔹 Crear un nuevo reporte (el backend maneja duplicados) */
+router.post(
+  '/',
+  [
+    body('player_id').isInt().withMessage('El ID del jugador debe ser un número entero'),
+    body('generado_por').isInt().withMessage('El ID del usuario debe ser un número entero'),
+  ],
+  validateRequest,
+  ReportController.generateReport
+);
+
+/** 🔹 Eliminar un reporte por ID */
+router.delete(
+  '/:id',
+  param('id').isInt().withMessage('El ID debe ser un número entero'),
+  validateRequest,
+  ReportController.deleteReport
+);
 
 export default router;

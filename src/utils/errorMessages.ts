@@ -34,13 +34,14 @@ export const ERROR_MESSAGES: Record<string, string> = {
   UPDATE_PLAYER_ERROR: 'Error actualizando jugador',
   DELETE_PLAYER_ERROR: 'Error eliminando jugador',
 
-  // 🔹 Análisis (Manual)
-  ANALYSIS_NOT_FOUND: 'Análisis no encontrado',
-  ANALYSIS_TEXT_NOT_FOUND: 'El análisis seleccionado no tiene texto válido para procesar.',
-  INVALID_ANALYSIS: 'Análisis inválido',
-  CREATE_ANALYSIS_ERROR: 'Error creando análisis',
-  UPDATE_ANALYSIS_ERROR: 'Error actualizando análisis',
-  DELETE_ANALYSIS_ERROR: 'Error eliminando análisis',
+  // 🔹 Declaraciones (antes análisis manual)
+  GET_DECLARATIONS_ERROR: 'Error obteniendo declaraciones',
+  DECLARATION_NOT_FOUND: 'Declaración no encontrada',
+  DECLARATION_TEXT_NOT_FOUND: 'La declaración seleccionada no tiene texto válido para procesar.',
+  INVALID_DECLARATION: 'Declaración inválida',
+  CREATE_DECLARATION_ERROR: 'Error creando declaración',
+  UPDATE_DECLARATION_ERROR: 'Error actualizando declaración',
+  DELETE_DECLARATION_ERROR: 'Error eliminando declaración',
 
   // 🔹 Análisis NLP (IA)
   GET_NLP_ANALYSIS_ERROR: 'Error obteniendo análisis NLP',

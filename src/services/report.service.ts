@@ -25,16 +25,22 @@ export class ReportService {
     }
   }
 
-  static async generateReport(player_id: number, generado_por: number): Promise<Report> {
+  static async generateReport(declaration_id: number, generado_por: number): Promise<Report> {
     try {
-      if (!player_id || isNaN(player_id)) throw new Error(ERROR_MESSAGES.INVALID_ID);
+      if (!declaration_id || isNaN(declaration_id)) throw new Error(ERROR_MESSAGES.INVALID_ID);
       if (!generado_por || isNaN(generado_por)) throw new Error(ERROR_MESSAGES.INVALID_ID);
 
-      // 🔹 Verificar si el jugador existe
-      const playerExists = await pool.query('SELECT id FROM player WHERE id = $1', [player_id]);
-      if (playerExists.rowCount === 0) {
-        throw new Error(ERROR_MESSAGES.PLAYER_NOT_FOUND);
+      // 🔹 Verificar si la declaración existe y obtener player_id
+      const declarationResult = await pool.query(
+        'SELECT player_id FROM declarations WHERE id = $1',
+        [declaration_id]
+      );
+
+      if (declarationResult.rowCount === 0) {
+        throw new Error(ERROR_MESSAGES.DECLARATION_NOT_FOUND);
       }
+
+      const player_id = declarationResult.rows[0].player_id;
 
       // 🔹 Verificar si el usuario (analista) existe
       const userExists = await pool.query('SELECT id FROM users WHERE id = $1', [generado_por]);
@@ -42,21 +48,10 @@ export class ReportService {
         throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
       }
 
-      // 🔹 Obtener el análisis más reciente del jugador
-      const analysisResult = await pool.query(
-        `SELECT id FROM analysis WHERE player_id = $1 ORDER BY created_at DESC LIMIT 1`,
-        [player_id]
-      );
-
-      if (analysisResult.rowCount === 0) {
-        throw new Error(ERROR_MESSAGES.ANALYSIS_NOT_FOUND);
-      }
-      const analysis = analysisResult.rows[0];
-
-      // 🔹 Obtener el análisis NLP más reciente del jugador
+      // 🔹 Obtener el análisis NLP más reciente basado en `declaration_id`
       const nlpResult = await pool.query(
-        `SELECT id FROM nlp_analysis WHERE analysis_id = $1 ORDER BY created_at DESC LIMIT 1`,
-        [analysis.id]
+        `SELECT id FROM nlp_analysis WHERE declaration_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [declaration_id]
       );
 
       if (nlpResult.rowCount === 0) {
@@ -66,9 +61,9 @@ export class ReportService {
 
       // 🔹 Insertar el reporte en la base de datos
       const result = await pool.query(
-        `INSERT INTO reports (player_id, analysis_id, nlp_analysis_id, generado_por)
+        `INSERT INTO reports (player_id, declaration_id, nlp_analysis_id, generado_por)
          VALUES ($1, $2, $3, $4) RETURNING *`,
-        [player_id, analysis.id, nlpAnalysis.id, generado_por]
+        [player_id, declaration_id, nlpAnalysis.id, generado_por]
       );
 
       return result.rows[0];
@@ -82,7 +77,6 @@ export class ReportService {
     try {
       if (!id || isNaN(id)) throw new Error(ERROR_MESSAGES.INVALID_ID);
 
-      // 🔹 Verificar si el reporte existe antes de eliminar
       const reportExists = await pool.query('SELECT id FROM reports WHERE id = $1', [id]);
       if (reportExists.rowCount === 0) {
         throw new Error(ERROR_MESSAGES.REPORT_NOT_FOUND);

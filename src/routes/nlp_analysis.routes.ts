@@ -17,7 +17,7 @@ router.get(
 router.post(
   '/',
   [
-    body('analysis_id').isInt().withMessage('El ID del análisis debe ser un número entero'),
+    body('declaration_id').isInt().withMessage('El ID de la declaración debe ser un número entero'),
     validateRequest
   ],
   NLPAnalysisController.createNLPAnalysis

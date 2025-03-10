@@ -16,11 +16,11 @@ router.get(
   ReportController.getReportById
 );
 
-/** 🔹 Crear un nuevo reporte (el backend maneja duplicados) */
+/** 🔹 Crear un nuevo reporte */
 router.post(
   '/',
   [
-    body('player_id').isInt().withMessage('El ID del jugador debe ser un número entero'),
+    body('declaration_id').isInt().withMessage('El ID de la declaración debe ser un número entero'),
     body('generado_por').isInt().withMessage('El ID del usuario debe ser un número entero'),
   ],
   validateRequest,

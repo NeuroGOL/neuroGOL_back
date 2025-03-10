@@ -1,6 +1,6 @@
 export interface NLPAnalysis {
   id?: number;
-  analysis_id: number;  // Relación con `analysis`
+  declaration_id: number;  
   emocion_detectada: string;
   tendencia_emocional: string;
   impacto_en_rendimiento: string;

@@ -3,7 +3,7 @@ import { NLPAnalysisService } from '../services/nlp_analysis.service';
 import { ERROR_MESSAGES } from '../utils/errorMessages';
 
 export class NLPAnalysisController {
-  static async getAllNLPAnalysis(req: Request, res: Response, next: NextFunction) {
+  static async getAllNLPAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const analysis = await NLPAnalysisService.getAllNLPAnalysis();
       res.json(analysis);
@@ -12,7 +12,7 @@ export class NLPAnalysisController {
     }
   }
 
-  static async getNLPAnalysisById(req: Request, res: Response, next: NextFunction) {
+  static async getNLPAnalysisById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
       const analysis = await NLPAnalysisService.getNLPAnalysisById(Number(id));
@@ -28,17 +28,26 @@ export class NLPAnalysisController {
     }
   }
 
-  static async createNLPAnalysis(req: Request, res: Response, next: NextFunction) {
+  static async createNLPAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { analysis_id, texto } = req.body;
-      const newAnalysis = await NLPAnalysisService.createNLPAnalysis(analysis_id);
-      res.status(201).json(newAnalysis);
+      console.log("📥 Datos recibidos en el backend:", req.body);
+
+      const { declaration_id } = req.body;
+
+      if (!declaration_id || isNaN(Number(declaration_id))) {
+        console.error("❌ Error: ID inválido:", declaration_id);
+        res.status(400).json({ message: ERROR_MESSAGES.INVALID_ID });
+        return;
+      }
+
+      const newAnalysis = await NLPAnalysisService.createNLPAnalysis(declaration_id);
+      res.status(201).json(newAnalysis); // ✅ Asegurar que `res.json()` es el único return
     } catch (error) {
       next(error);
     }
   }
 
-  static async deleteNLPAnalysis(req: Request, res: Response, next: NextFunction) {
+  static async deleteNLPAnalysis(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
       const deleted = await NLPAnalysisService.deleteNLPAnalysis(Number(id));

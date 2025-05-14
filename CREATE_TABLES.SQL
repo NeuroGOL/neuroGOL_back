@@ -1,5 +1,11 @@
--- 🔹 Elimina las tablas si ya existen para evitar conflictos
-DROP TABLE IF EXISTS ai_models, nlp_analysis, reports, performance, emotion, matches, players, users CASCADE;
+-- 🔹 Crear tabla de roles
+CREATE TABLE role (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Insertar roles por defecto
+INSERT INTO role (nombre) VALUES ('admin'), ('analista');
 
 -- 🔹 Crear tabla de usuarios
 CREATE TABLE users (
@@ -7,83 +13,53 @@ CREATE TABLE users (
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     contrasena TEXT NOT NULL,
-    rol VARCHAR(20) CHECK (rol IN ('admin', 'analista', 'entrenador')),
+    role_id INT REFERENCES role(id) ON DELETE SET NULL,
+    profile_picture TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 🔹 Crear tabla de jugadores
-CREATE TABLE players (
+CREATE TABLE player (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     equipo VARCHAR(100) NOT NULL,
-    posicion VARCHAR(50) NOT NULL,
-    fecha_nacimiento DATE NOT NULL,
     nacionalidad VARCHAR(50) NOT NULL,
+    profile_picture TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 🔹 Crear tabla de partidos
-CREATE TABLE matches (
+-- 🔹 Crear tabla de declaraciones manuales (Datos ingresados por analistas)
+CREATE TABLE declarations (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL, -- Nombre del partido (ej. "Barcelona vs Real Madrid")
-    fecha DATE NOT NULL,
-    ubicacion VARCHAR(100),
+    player_id INT NOT NULL REFERENCES player(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    categoria_texto VARCHAR(50) NOT NULL, -- "Previo al partido", "Post-partido", "Durante entrenamiento", "Lesión"
+    fuente VARCHAR(100) NOT NULL, -- "Entrevista", "Redes Sociales", "Conferencia de prensa", etc.
+    texto TEXT NOT NULL, -- Comentario o declaración del jugador
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 🔹 Crear tabla de rendimiento (Performance)
-CREATE TABLE performance (
-    id SERIAL PRIMARY KEY,
-    player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-    match_id INT REFERENCES matches(id) ON DELETE SET NULL, -- Relación con partidos
-    minutos_jugados INT NOT NULL CHECK (minutos_jugados >= 0),
-    goles INT NOT NULL CHECK (goles >= 0),
-    asistencias INT NOT NULL CHECK (asistencias >= 0),
-    tarjetas_amarillas INT NOT NULL CHECK (tarjetas_amarillas >= 0),
-    tarjetas_rojas INT NOT NULL CHECK (tarjetas_rojas >= 0),
-    calificacion NUMERIC(3,1) CHECK (calificacion >= 0 AND calificacion <= 10), -- Evaluación de 0 a 10
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 🔹 Crear tabla de emociones (Emotion)
-CREATE TABLE emotion (
-    id SERIAL PRIMARY KEY,
-    player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-    tipo VARCHAR(50) NOT NULL, -- Ejemplo: "Ansiedad", "Felicidad", "Estrés"
-    intensidad INT NOT NULL CHECK (intensidad >= 1 AND intensidad <= 10), -- Nivel de 1 a 10
-    descripcion TEXT,
-    fecha DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 🔹 Crear tabla de reportes (Análisis y estadísticas)
-CREATE TABLE reports (
-    id SERIAL PRIMARY KEY,
-    player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-    tipo VARCHAR(50) NOT NULL, -- "Tendencia emocional", "Rendimiento", "Comparación"
-    datos JSONB NOT NULL, -- Se almacenarán métricas en formato JSON
-    generado_por VARCHAR(50) NOT NULL DEFAULT 'Sistema',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 🔹 Crear tabla de análisis de texto (NLP)
+-- 🔹 Crear tabla de análisis NLP (Generado por IA)
 CREATE TABLE nlp_analysis (
     id SERIAL PRIMARY KEY,
-    player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-    fuente TEXT NOT NULL, -- "Entrevista", "Redes Sociales", etc.
-    texto TEXT NOT NULL, -- Texto analizado
-    emocion_detectada VARCHAR(50), -- "Felicidad", "Ansiedad", "Ira", etc.
-    confianza NUMERIC(4,3) CHECK (confianza >= 0 AND confianza <= 1), -- Nivel de confianza del modelo (0-1)
+    declaration_id INT NOT NULL REFERENCES declarations(id) ON DELETE CASCADE,
+    emocion_detectada VARCHAR(250) NOT NULL, -- "Felicidad", "Ansiedad", "Ira", etc.
+    tendencia_emocional TEXT NOT NULL, -- Cómo han cambiado las emociones con el tiempo
+    impacto_en_rendimiento VARCHAR(50) NOT NULL, -- "Positivo", "Negativo" o "Neutro"
+    impacto_en_equipo VARCHAR(250) NOT NULL, -- "Positivo", "Negativo" o "Neutro"
+    estado_actual_emocional VARCHAR(250) NOT NULL, -- "Estable", "Inestable", "En riesgo"
+    rendimiento_predicho VARCHAR(250) NOT NULL, -- "Alto", "Medio", "Bajo"
+    resumen_general TEXT NOT NULL, -- Explicación global sobre el estado emocional del jugador
+    acciones_recomendadas TEXT NOT NULL, -- Sugerencias para mejorar su estabilidad emocional
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 🔹 Crear tabla de modelos de IA (Predicciones)
-CREATE TABLE ai_models (
+-- 🔹 Crear tabla de reportes (Consolidado final con información de la IA)
+CREATE TABLE reports (
     id SERIAL PRIMARY KEY,
-    player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-    modelo VARCHAR(50) NOT NULL, -- "Red neuronal", "Regresión", etc.
-    prediccion JSONB NOT NULL, -- Almacena el resultado de la predicción
-    precision NUMERIC(4,3) CHECK (precision >= 0 AND precision <= 1), -- Precisión del modelo (0-1)
-    creado_por VARCHAR(50) NOT NULL DEFAULT 'Sistema',
+    player_id INT NOT NULL REFERENCES player(id) ON DELETE CASCADE,
+    declaration_id INT NOT NULL REFERENCES declarations(id) ON DELETE CASCADE,
+    nlp_analysis_id INT NOT NULL REFERENCES nlp_analysis(id) ON DELETE CASCADE,
+    generado_por INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- Usuario que generó el reporte
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

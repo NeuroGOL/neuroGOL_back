@@ -1,8 +1,8 @@
 export interface Report {
   id?: number;
   player_id: number;
-  tipo: 'emocional' | 'tendencia'; // Análisis de emociones o tendencias
-  datos: any; // JSON con estadísticas de emociones
-  generado_por: string; // "Sistema" o usuario
+  declaration_id: number; 
+  nlp_analysis_id: number;
+  generado_por: number;
   created_at?: Date;
 }

@@ -1,19 +1,18 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { RoleService } from '../services/role.service';
 import { ERROR_MESSAGES } from '../utils/errorMessages';
 
 export class RoleController {
-  static async getAllRoles(req: Request, res: Response): Promise<void> {
+  static async getAllRoles(req: Request, res: Response, next: NextFunction) {
     try {
       const roles = await RoleService.getAllRoles();
       res.json(roles);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.GET_ROLES_ERROR });
+      next(error);
     }
   }
 
-  static async getRoleById(req: Request, res: Response): Promise<void> {
+  static async getRoleById(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const role = await RoleService.getRoleById(Number(id));
@@ -25,39 +24,23 @@ export class RoleController {
 
       res.json(role);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.GET_ROLES_ERROR });
+      next(error);
     }
   }
 
-  static async createRole(req: Request, res: Response): Promise<void> {
+  static async createRole(req: Request, res: Response, next: NextFunction) {
     try {
-      const { nombre } = req.body;
-
-      if (!nombre) {
-        res.status(400).json({ message: ERROR_MESSAGES.MISSING_FIELDS });
-        return;
-      }
-
-      const newRole = await RoleService.createRole(nombre);
+      const newRole = await RoleService.createRole(req.body);
       res.status(201).json(newRole);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.CREATE_ROLE_ERROR });
+      next(error);
     }
   }
 
-  static async updateRole(req: Request, res: Response): Promise<void> {
+  static async updateRole(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const { nombre } = req.body;
-
-      if (!nombre) {
-        res.status(400).json({ message: ERROR_MESSAGES.MISSING_FIELDS });
-        return;
-      }
-
-      const updatedRole = await RoleService.updateRole(Number(id), nombre);
+      const updatedRole = await RoleService.updateRole(Number(id), req.body);
 
       if (!updatedRole) {
         res.status(404).json({ message: ERROR_MESSAGES.ROLE_NOT_FOUND });
@@ -66,12 +49,11 @@ export class RoleController {
 
       res.json(updatedRole);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.UPDATE_ROLE_ERROR });
+      next(error);
     }
   }
 
-  static async deleteRole(req: Request, res: Response): Promise<void> {
+  static async deleteRole(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const deleted = await RoleService.deleteRole(Number(id));
@@ -83,8 +65,7 @@ export class RoleController {
 
       res.json({ message: 'Rol eliminado correctamente' });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: ERROR_MESSAGES.DELETE_ROLE_ERROR });
+      next(error);
     }
   }
 }

@@ -1,4 +1,5 @@
 export const ERROR_MESSAGES: Record<string, string> = {
+  // 🔹 Validaciones Generales
   INVALID_ID: 'El ID debe ser un número entero',
   NAME_TOO_SHORT: 'El nombre debe tener al menos 3 caracteres',
   INVALID_EMAIL: 'Debe ser un email válido',
@@ -7,12 +8,18 @@ export const ERROR_MESSAGES: Record<string, string> = {
   MISSING_FIELDS: 'Todos los campos son obligatorios',
   INVALID_DATE: 'Fecha inválida',
 
+  // 🔹 Usuarios
   GET_USERS_ERROR: 'Error obteniendo usuarios',
   USER_NOT_FOUND: 'Usuario no encontrado',
   CREATE_USER_ERROR: 'Error creando usuario',
   UPDATE_USER_ERROR: 'Error actualizando usuario',
   DELETE_USER_ERROR: 'Error eliminando usuario',
+  EMAIL_ALREADY_EXISTS: 'El email ya está en uso',
+  INVALID_CREDENTIALS: 'Correo o contraseña incorrectos',
+  REGISTRATION_ERROR: 'Error registrando usuario',
+  LOGIN_ERROR: 'Error iniciando sesión',
 
+  // 🔹 Roles
   GET_ROLES_ERROR: 'Error obteniendo roles',
   ROLE_NOT_FOUND: 'Rol no encontrado',
   CREATE_ROLE_ERROR: 'Error creando rol',
@@ -20,35 +27,43 @@ export const ERROR_MESSAGES: Record<string, string> = {
   DELETE_ROLE_ERROR: 'Error eliminando rol',
   ROLE_NAME_TOO_SHORT: 'El nombre del rol debe tener al menos 3 caracteres',
 
+  // 🔹 Jugadores
   GET_PLAYERS_ERROR: 'Error obteniendo jugadores',
   PLAYER_NOT_FOUND: 'Jugador no encontrado',
   CREATE_PLAYER_ERROR: 'Error creando jugador',
   UPDATE_PLAYER_ERROR: 'Error actualizando jugador',
   DELETE_PLAYER_ERROR: 'Error eliminando jugador',
 
-  GET_EMOTIONS_ERROR: 'Error obteniendo emociones',
-  EMOTION_NOT_FOUND: 'Emoción no encontrada',
-  CREATE_EMOTION_ERROR: 'Error creando emoción',
-  DELETE_EMOTION_ERROR: 'Error eliminando emoción',
+  // 🔹 Declaraciones (antes análisis manual)
+  GET_DECLARATIONS_ERROR: 'Error obteniendo declaraciones',
+  DECLARATION_NOT_FOUND: 'Declaración no encontrada',
+  DECLARATION_TEXT_NOT_FOUND: 'La declaración seleccionada no tiene texto válido para procesar.',
+  INVALID_DECLARATION: 'Declaración inválida',
+  CREATE_DECLARATION_ERROR: 'Error creando declaración',
+  UPDATE_DECLARATION_ERROR: 'Error actualizando declaración',
+  DELETE_DECLARATION_ERROR: 'Error eliminando declaración',
 
+  // 🔹 Análisis NLP (IA)
+  GET_NLP_ANALYSIS_ERROR: 'Error obteniendo análisis NLP',
+  NLP_ANALYSIS_NOT_FOUND: 'Análisis NLP no encontrado',
+  CREATE_NLP_ANALYSIS_ERROR: 'Error creando análisis NLP',
+  DELETE_NLP_ANALYSIS_ERROR: 'Error eliminando análisis NLP',
+
+  // 🔹 Reportes
   GET_REPORTS_ERROR: 'Error obteniendo reportes',
   REPORT_NOT_FOUND: 'Reporte no encontrado',
   CREATE_REPORT_ERROR: 'Error creando reporte',
   DELETE_REPORT_ERROR: 'Error eliminando reporte',
 
-  GET_NLP_ERROR: 'Error obteniendo análisis de texto',
-  NLP_NOT_FOUND: 'Análisis de texto no encontrado',
-  CREATE_NLP_ERROR: 'Error creando análisis de texto',
-  DELETE_NLP_ERROR: 'Error eliminando análisis de texto',
-
+  // 🔹 Modelos de IA (si se usan predicciones)
   GET_AI_MODELS_ERROR: 'Error obteniendo predicciones de IA',
   AI_MODEL_NOT_FOUND: 'Predicción de IA no encontrada',
   CREATE_AI_MODEL_ERROR: 'Error creando predicción de IA',
   DELETE_AI_MODEL_ERROR: 'Error eliminando predicción de IA',
 
-  EMAIL_ALREADY_EXISTS: 'El email ya está en uso',
-  INVALID_CREDENTIALS: 'Correo o contraseña incorrectos',
-  REGISTRATION_ERROR: 'Error registrando usuario',
-  LOGIN_ERROR: 'Error iniciando sesión',
-  UNKNOWN_ERROR: 'Ocurrió un error desconocido'
+  // 🔹 API Externa (Gemini / OpenAI)
+  OPENAI_QUOTA_EXCEEDED: 'Has superado tu cuota actual en OpenAI. Por favor, revisa tu plan y detalles de facturación.',
+
+  // 🔹 Otros errores generales
+  UNKNOWN_ERROR: 'Ocurrió un error desconocido',
 };

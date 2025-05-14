@@ -1,18 +1,38 @@
 import { Router } from 'express';
+import { body, param } from 'express-validator';
 import { ReportController } from '../controllers/report.controller';
 import { validateRequest } from '../middleware/validateRequest';
-import { param } from 'express-validator';
-import { ERROR_MESSAGES } from '../utils/errorMessages';
 
 const router = Router();
 
-router.get('/player/:player_id', param('player_id').isInt().withMessage(ERROR_MESSAGES.INVALID_ID), validateRequest, ReportController.getReportsByPlayer);
-router.get('/:id', param('id').isInt().withMessage(ERROR_MESSAGES.INVALID_ID), validateRequest, ReportController.getReportById);
+/** 🔹 Obtener todos los reportes */
+router.get('/', ReportController.getAllReports);
 
-router.post('/', ReportController.createReport);
-router.delete('/:id', ReportController.deleteReport);
+/** 🔹 Obtener un reporte por ID */
+router.get(
+  '/:id',
+  param('id').isInt().withMessage('El ID debe ser un número entero'),
+  validateRequest,
+  ReportController.getReportById
+);
 
-// Generar reporte automático de emociones
-router.post('/generate/:player_id', ReportController.generateEmotionReport);
+/** 🔹 Crear un nuevo reporte */
+router.post(
+  '/',
+  [
+    body('declaration_id').isInt().withMessage('El ID de la declaración debe ser un número entero'),
+    body('generado_por').isInt().withMessage('El ID del usuario debe ser un número entero'),
+  ],
+  validateRequest,
+  ReportController.generateReport
+);
+
+/** 🔹 Eliminar un reporte por ID */
+router.delete(
+  '/:id',
+  param('id').isInt().withMessage('El ID debe ser un número entero'),
+  validateRequest,
+  ReportController.deleteReport
+);
 
 export default router;

@@ -33,45 +33,67 @@ export class NLPAnalysisService {
   }
 
   static async createNLPAnalysis(declaration_id: number): Promise<NLPAnalysis> {
+    console.log("✅ ESTE ES EL ARCHIVO CORRECTO: NLPAnalysisService.ts");
+
     try {
+      
       console.log("📥 ID recibido en createNLPAnalysis:", declaration_id);
 
       if (!declaration_id || isNaN(declaration_id)) {
-        console.error("❌ Error: ID de declaración inválido:", declaration_id);
         throw new Error(ERROR_MESSAGES.INVALID_ID);
       }
 
-      // 🔹 Obtener la declaración
       const declarationResult = await pool.query('SELECT texto FROM declarations WHERE id = $1', [declaration_id]);
-
       if (declarationResult.rowCount === 0) {
-        console.error("❌ Declaración no encontrada:", declaration_id);
         throw new Error(ERROR_MESSAGES.DECLARATION_NOT_FOUND);
       }
 
       const texto = declarationResult.rows[0].texto;
-
       if (!texto || texto.trim() === '') {
-        console.error("❌ La declaración está vacía.");
         throw new Error(ERROR_MESSAGES.DECLARATION_TEXT_NOT_FOUND);
       }
 
       console.log("📜 Texto de la declaración:", texto);
 
-      // 🔹 Análisis con IA
+      // Análisis de emoción y score con Hugging Face
+      console.log("➡️ Analizando emoción...");
       const emocion_ingles = await NLPAnalysisService.analyzeEmotionWithHuggingFace(texto);
-      const emocion_detectada = await NLPAnalysisService.translateEmotionToSpanishWithGemini(emocion_ingles);
-      const nlpResults = await NLPAnalysisService.generateDetailedAnalysisWithGemini(texto, emocion_detectada);
 
-      // 🔹 Insertar resultado en `nlp_analysis`
+      const emocion_detectada = await NLPAnalysisService.translateEmotionToSpanishWithGemini(emocion_ingles.emotion);
+      const rendimiento_predicho = emocion_ingles.score;
+      console.log("✅ RENDIMIENTO PREDICHO:", rendimiento_predicho);
+
+      // Generar análisis con Gemini
+      const geminiData = await NLPAnalysisService.generateDetailedAnalysisWithGemini(texto, emocion_detectada);
+
+      // ⚠️ Asegurarse de ignorar cualquier campo extra que devuelva Gemini
+      delete geminiData.rendimiento_predicho;
+
+      const {
+        tendencia_emocional,
+        impacto_en_rendimiento,
+        impacto_en_equipo,
+        estado_actual_emocional,
+        resumen_general,
+        acciones_recomendadas
+      } = geminiData;
+
+      // Insertar resultado final
       const result = await pool.query(
-        `INSERT INTO nlp_analysis (declaration_id, emocion_detectada, tendencia_emocional, impacto_en_rendimiento, 
-          impacto_en_equipo, estado_actual_emocional, rendimiento_predicho, resumen_general, acciones_recomendadas) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+        `INSERT INTO nlp_analysis (
+        declaration_id, emocion_detectada, tendencia_emocional, impacto_en_rendimiento,
+        impacto_en_equipo, estado_actual_emocional, rendimiento_predicho, resumen_general, acciones_recomendadas
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
         [
-          declaration_id, emocion_detectada, nlpResults.tendencia_emocional, nlpResults.impacto_en_rendimiento,
-          nlpResults.impacto_en_equipo, nlpResults.estado_actual_emocional, nlpResults.rendimiento_predicho,
-          nlpResults.resumen_general, nlpResults.acciones_recomendadas
+          declaration_id,
+          emocion_detectada,
+          tendencia_emocional,
+          impacto_en_rendimiento,
+          impacto_en_equipo,
+          estado_actual_emocional,
+          rendimiento_predicho, // ✅ ahora sí viene directo del modelo
+          resumen_general,
+          acciones_recomendadas
         ]
       );
 
@@ -83,6 +105,7 @@ export class NLPAnalysisService {
       throw new Error(ERROR_MESSAGES.CREATE_NLP_ERROR);
     }
   }
+
 
   static async deleteNLPAnalysis(id: number): Promise<boolean> {
     try {
@@ -102,12 +125,12 @@ export class NLPAnalysisService {
   }
 
   // 🔹 Método para analizar emociones con Gemini
-  static async analyzeEmotionWithHuggingFace(text: string): Promise<string> {
+  static async analyzeEmotionWithHuggingFace(text: string): Promise<{ emotion: string, score: number }> {
     try {
-      // 🔹 Traducir usando Gemini
+      console.log("🚀 Entrando a analyzeEmotionWithHuggingFace");
+      // Traduce el texto
       const translatedText = await NLPAnalysisService.translateToEnglishWithGemini(text);
 
-      // 🔹 Cargar modelo si no se ha cargado aún
       if (!emotionClassifier) {
         emotionClassifier = await pipeline(
           'text-classification',
@@ -116,35 +139,46 @@ export class NLPAnalysisService {
         );
       }
 
-      // 🔹 Analizar emoción con el texto traducido
-      const result = await emotionClassifier(translatedText, { topk: 1 });
-      const predictedEmotion = result[0].label;
+      const result = await emotionClassifier(translatedText, { return_all_scores: true });
+      const scores = result[0];
 
-      console.log("🎯 Emoción detectada:", predictedEmotion);
-      return predictedEmotion;
+      // Obtener emoción con mayor score
+      const topEmotion = scores.reduce((max: { label: string; score: number }, curr: { label: string; score: number }) =>
+        curr.score > max.score ? curr : max
+      );
+      const emotionInEnglish = topEmotion.label;
+      const score = parseFloat((topEmotion.score * 100).toFixed(2)); // para tener un valor 0–100
+
+      console.log("🎯 Emoción:", emotionInEnglish, "📊 Score:", score);
+
+      // Traducir la emoción
+      const emotionInSpanish = await NLPAnalysisService.translateEmotionToSpanishWithGemini(emotionInEnglish);
+
+      return { emotion: emotionInSpanish, score };
+
     } catch (error) {
       console.error("❌ Error en análisis de emoción:", error);
       throw new Error("Error al analizar emoción con Hugging Face.");
     }
   }
 
+
   // 🔹 Método para generar análisis detallado con Gemini
   static async generateDetailedAnalysisWithGemini(text: string, emocion_detectada: string) {
     try {
       const prompt = `Analiza la siguiente declaración: "${text}". La emoción detectada es "${emocion_detectada}".  
 
-      Devuelve un JSON con:
-      {
-        "tendencia_emocional": "Describe cómo han cambiado las emociones a lo largo del tiempo.",
-        "impacto_en_rendimiento": "Positivo / Negativo / Neutro",
-        "impacto_en_equipo": "Positivo / Negativo / Neutro",
-        "estado_actual_emocional": "Estable / Inestable / En riesgo",
-        "rendimiento_predicho": "Alto / Medio / Bajo",
-        "resumen_general": "Explicación breve y consecuencias positivas o negativas dependiendo de la situación (en contexto futbol).",
-        "acciones_recomendadas": "Sugerencias para mejorar el estado emocional/rendimiento o cómo mantenerlo."
-      }
+Devuelve un JSON SOLO con estos campos:
+{
+  "tendencia_emocional": "...",
+  "impacto_en_rendimiento": "...",
+  "impacto_en_equipo": "...",
+  "estado_actual_emocional": "...",
+  "resumen_general": "...",
+  "acciones_recomendadas": "..."
+}
 
-      Responde solo con el JSON, sin texto adicional.`;
+NO incluyas ningún campo adicional. Responde solo con el JSON, sin explicaciones.`;
 
       const response = await genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }).generateContent(prompt);
       let rawText = response.response.text();

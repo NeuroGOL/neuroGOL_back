@@ -4,8 +4,10 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ERROR_MESSAGES } from '../utils/errorMessages';
 import { log } from 'console';
 import { NextFunction, Request, Response } from 'express';
+import { pipeline } from '@xenova/transformers';
 
 const genAI = new GoogleGenerativeAI(process.env.GENERIC_API_KEY!);
+let emotionClassifier: any = null;
 
 export class NLPAnalysisService {
   static async getAllNLPAnalysis(): Promise<NLPAnalysis[]> {
@@ -57,7 +59,8 @@ export class NLPAnalysisService {
       console.log("📜 Texto de la declaración:", texto);
 
       // 🔹 Análisis con IA
-      const emocion_detectada = await NLPAnalysisService.analyzeEmotionWithGemini(texto);
+      const emocion_ingles = await NLPAnalysisService.analyzeEmotionWithHuggingFace(texto);
+      const emocion_detectada = await NLPAnalysisService.translateEmotionToSpanishWithGemini(emocion_ingles);
       const nlpResults = await NLPAnalysisService.generateDetailedAnalysisWithGemini(texto, emocion_detectada);
 
       // 🔹 Insertar resultado en `nlp_analysis`
@@ -99,19 +102,29 @@ export class NLPAnalysisService {
   }
 
   // 🔹 Método para analizar emociones con Gemini
-  static async analyzeEmotionWithGemini(text: string): Promise<string> {
+  static async analyzeEmotionWithHuggingFace(text: string): Promise<string> {
     try {
-      const prompt = `Detecta la emoción predominante en el siguiente texto y responde solo con la emoción detectada: "${text}"`;
+      // 🔹 Traducir usando Gemini
+      const translatedText = await NLPAnalysisService.translateToEnglishWithGemini(text);
 
-      const response = await genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }).generateContent(prompt);
-      const emotion = response.response.text();
+      // 🔹 Cargar modelo si no se ha cargado aún
+      if (!emotionClassifier) {
+        emotionClassifier = await pipeline(
+          'text-classification',
+          'Xenova/j-hartmann/emotion-english-distilroberta-base',
+          { quantized: true }
+        );
+      }
 
-      if (!emotion) throw new Error('No se detectó ninguna emoción');
+      // 🔹 Analizar emoción con el texto traducido
+      const result = await emotionClassifier(translatedText, { topk: 1 });
+      const predictedEmotion = result[0].label;
 
-      return emotion.trim();
+      console.log("🎯 Emoción detectada:", predictedEmotion);
+      return predictedEmotion;
     } catch (error) {
-      console.error('Error al analizar emoción con Gemini:', error);
-      throw new Error(ERROR_MESSAGES.NLP_ANALYSIS_FAILED);
+      console.error("❌ Error en análisis de emoción:", error);
+      throw new Error("Error al analizar emoción con Hugging Face.");
     }
   }
 
@@ -143,4 +156,40 @@ export class NLPAnalysisService {
       throw new Error(ERROR_MESSAGES.NLP_ANALYSIS_FAILED);
     }
   }
+
+  static async translateToEnglishWithGemini(text: string): Promise<string> {
+    try {
+      const prompt = `Traduce el siguiente texto del español al inglés. Responde solo con la traducción, sin explicaciones:\n"${text}"`;
+
+      const response = await genAI
+        .getGenerativeModel({ model: 'gemini-2.0-pro' }) // o el modelo que estés usando
+        .generateContent(prompt);
+
+      const translatedText = response.response.text().trim();
+      console.log("🔄 Traducción (Gemini):", translatedText);
+      return translatedText;
+    } catch (error) {
+      console.error("❌ Error al traducir con Gemini:", error);
+      throw new Error("Error al traducir el texto al inglés.");
+    }
+  }
+
+  static async translateEmotionToSpanishWithGemini(emotion: string): Promise<string> {
+    try {
+      const prompt = `Traduce al español solo esta palabra de emoción: "${emotion}". Responde únicamente con la traducción.`;
+
+      const response = await genAI
+        .getGenerativeModel({ model: 'gemini-2.0-pro' })
+        .generateContent(prompt);
+
+      const translatedEmotion = response.response.text().trim().toLowerCase();
+
+      console.log("🌐 Emoción traducida:", translatedEmotion);
+      return translatedEmotion;
+    } catch (error) {
+      console.error("❌ Error traduciendo emoción con Gemini:", error);
+      throw new Error("Error al traducir la emoción al español.");
+    }
+  }
+
 }

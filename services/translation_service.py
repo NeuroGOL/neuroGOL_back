@@ -16,10 +16,6 @@ Texto a traducir:
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
-            generation_config=types.GenerationConfig(
-                temperature=0.2,
-                max_output_tokens=512
-            )
         )
         return response.text.strip()
     except Exception as e:

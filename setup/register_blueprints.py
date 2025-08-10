@@ -5,7 +5,7 @@ from routes import (
     nlp_analysis_bp,
     declaration_bp,
     player_bp,
-    report_bp
+    report_bp,
 )
 
 def register_blueprints(app):

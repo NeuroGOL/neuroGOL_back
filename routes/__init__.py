@@ -13,5 +13,6 @@ __all__ = [
     "nlp_analysis_bp",
     "declaration_bp",
     "player_bp",
-    "report_bp"
+    "report_bp",
+    "emotion_evaluation_bp"
 ]

@@ -1,0 +1,36 @@
+# Entornos virtuales
+.venv/
+venv/
+ENV/
+env/
+
+# Archivos de entorno (credenciales privadas)
+.env
+
+# Archivos de Python compilados
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de logs
+*.log
+
+# Archivos temporales
+*.sqlite3
+*.db
+.DS_Store
+
+# Configuración de VSCode
+.vscode/
+.idea/
+
+# Archivos de dependencias de pip
+pip-wheel-metadata/
+
+# Archivos creados por Jupyter
+.ipynb_checkpoints/
+
+# Archivos de cobertura de tests
+.coverage
+htmlcov/

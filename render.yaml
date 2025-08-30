@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: neurogol-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: DB_HOST
+        value: db.ucfezcgfkspfqonfdwjj.supabase.co
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASS
+        value: GBraQQbzemVWvfpb   
+      - key: DB_NAME
+        value: postgres
+      - key: DB_PORT
+        value: 5432
+      - key: JWT_SECRET
+        value: supersecretoseguro

@@ -20,7 +20,7 @@ def create_app():
 
     @app.route("/")
     def index():
-        return "Backend Flask corriendo en Render 🚀"
+        return {"message": "Backend Flask corriendo en Render 🚀"}
 
     return app
 
@@ -30,8 +30,10 @@ def initialize_database(app):
         db.create_all()
 
 
+# 👇 Esto es lo que Render (con Gunicorn) necesita:
+app = create_app()
+initialize_database(app)
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))  # Render asigna el puerto en PORT
-    app = create_app()
-    initialize_database(app)
     app.run(host="0.0.0.0", port=port, debug=False)

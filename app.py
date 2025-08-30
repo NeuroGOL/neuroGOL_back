@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS  # 👈 Importa CORS
 
 # Inicializamos la base de datos
 db = SQLAlchemy()
@@ -13,6 +14,9 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
+
+    # ✅ Habilitar CORS para todas las rutas y orígenes (en dev y prod)
+    CORS(app, resources={r"/*": {"origins": ["http://localhost:4200", "https://tu-frontend.com"]}})
 
     # Importar y registrar tus blueprints aquí
     # from routes.user_routes import user_bp

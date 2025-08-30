@@ -1,43 +1,37 @@
+import os
 from flask import Flask
-from flask_cors import CORS  # ⬅️ Importa CORS
-from config import Config
-from setup.register_extensions import register_extensions
-from setup.register_blueprints import register_blueprints
-from setup.init_database import initialize_database
-from utils.error_handlers import register_error_handlers
+from flask_sqlalchemy import SQLAlchemy
+
+# Inicializamos la base de datos
+db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)
 
-    # ✅ Evita redirecciones que rompen CORS
-    app.url_map.strict_slashes = False
+    # Configuración de la base de datos (ajusta con tus variables de entorno en Render)
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///default.db")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # ✅ Configuración segura de CORS para Angular en localhost
-    CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
+    db.init_app(app)
 
-    # ✅ Registros de extensiones, rutas y errores
-    register_extensions(app)
-    register_blueprints(app)
-    register_error_handlers(app)
+    # Importar y registrar tus blueprints aquí
+    # from routes.user_routes import user_bp
+    # app.register_blueprint(user_bp, url_prefix="/users")
 
-    # ✅ Refuerza CORS con headers manuales (opcional pero útil)
-    @app.after_request
-    def apply_cors_headers(response):
-        response.headers["Access-Control-Allow-Origin"] = "http://localhost:4200"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
-        return response
-
-    @app.route('/')
+    @app.route("/")
     def index():
-        return {"message": "NeuroGOL backend funcionando"}
+        return "Backend Flask corriendo en Render 🚀"
 
     return app
 
+
+def initialize_database(app):
+    with app.app_context():
+        db.create_all()
+
+
 if __name__ == "__main__":
-    import os
-    port = int(os.getenv("PORT", 5000))
+    port = int(os.getenv("PORT", 5000))  # Render asigna el puerto en PORT
     app = create_app()
     initialize_database(app)
     app.run(host="0.0.0.0", port=port, debug=False)

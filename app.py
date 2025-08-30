@@ -36,6 +36,7 @@ def initialize_database(app):
 
 # 👇 Esto es lo que Render (con Gunicorn) necesita:
 app = create_app()
+CORS(app)
 initialize_database(app)
 
 if __name__ == "__main__":

@@ -42,7 +42,7 @@ def create_app():
 
 # 👇 Esto es lo que Render (con Gunicorn) necesita
 app = create_app()
-initialize_database(app)
+# initialize_database(app)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))  # Render asigna el puerto automáticamente

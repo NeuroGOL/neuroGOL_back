@@ -17,7 +17,7 @@ def create_app():
     # ✅ Configuración de CORS para dev y prod
     CORS(app, resources={r"/*": {"origins": [
         "http://localhost:4200",      # Angular local
-        "https://tu-frontend.com"     # Producción
+        "https://neuro-gol.netlify.app"     # Producción
     ]}})
 
     # ✅ Registro de extensiones, rutas y errores

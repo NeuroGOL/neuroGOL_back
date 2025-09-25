@@ -1,11 +1,12 @@
 import os
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
 from config import Config
 from setup.register_extensions import register_extensions
 from setup.register_blueprints import register_blueprints
 from setup.init_database import initialize_database
 from utils.error_handlers import register_error_handlers
+
 
 def create_app():
     app = Flask(__name__)
@@ -15,25 +16,35 @@ def create_app():
     app.url_map.strict_slashes = False
 
     # ✅ Configuración de CORS para dev y prod
-    CORS(app, resources={r"/*": {"origins": [
-        "http://localhost:4200",      # Angular local
-        "https://neuro-gol.netlify.app"     # Producción
-    ]}})
+    CORS(
+        app,
+        resources={r"/*": {"origins": [
+            "http://localhost:4200",
+            "https://neuro-gol.netlify.app"
+        ]}},
+        supports_credentials=True
+    )
 
     # ✅ Registro de extensiones, rutas y errores
     register_extensions(app)
     register_blueprints(app)
     register_error_handlers(app)
 
-    # ✅ Headers extra para reforzar CORS
+    # ✅ Headers extra solo si el origin está permitido
     @app.after_request
     def apply_cors_headers(response):
-        response.headers["Access-Control-Allow-Origin"] = "http://localhost:4200"
+        origin = request.headers.get("Origin")
+        allowed = [
+            "http://localhost:4200",
+            "https://neuro-gol.netlify.app"
+        ]
+        if origin in allowed:
+            response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
         response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
         return response
 
-    @app.route('/')
+    @app.route("/")
     def index():
         return {"message": "NeuroGOL backend funcionando 🚀"}
 

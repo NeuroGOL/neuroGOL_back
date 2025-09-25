@@ -1,10 +1,22 @@
+import random
 from google import genai
 from google.genai import types
 
-# Configurar el cliente con tu API key
-client = genai.Client(api_key="AIzaSyBiF2sz9fpD7OUkyotW4zhSR8x86DuXmOA")
+# Lista de API keys
+API_KEYS = [
+    "AIzaSyDTx8qSDyzD9Q96FD0jMAb7_npheFIXzE4",
+    "AIzaSyBi_hSKX4FOtf0UH4RhQ7kIpeo5gDj4Qwk",
+    "AIzaSyDNWJngukHKIGkK0JEZqXbiqhnpM41z_vc"
+]
+
+def get_random_client():
+    """Devuelve un cliente de Gemini con una API key aleatoria"""
+    api_key = random.choice(API_KEYS)
+    return genai.Client(api_key=api_key)
 
 def translate_to_english(text: str) -> str:
+    client = get_random_client()  # Cada vez se usa una key aleatoria
+
     prompt = f"""
 Eres un traductor profesional. Traduce el siguiente texto al inglés de forma precisa, sin explicaciones adicionales ni rodeos. Devuelve **solo el texto traducido**, sin encabezados, sin comillas, sin formato markdown.
 

@@ -42,3 +42,4 @@ Texto a traducir:
     
     # Si todas las keys fallaron
     raise RuntimeError("Todas las API keys han excedido su cuota. Por favor, espera unos minutos.")
+

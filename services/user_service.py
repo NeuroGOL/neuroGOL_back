@@ -1,5 +1,4 @@
-from extensions import bcrypt
-from extensions import db
+from extensions import bcrypt, db
 from models.user_model import User
 from utils.error_handlers import APIError
 
@@ -16,27 +15,27 @@ class UserService:
             raise APIError("Usuario no encontrado", 404)
         return UserService.serialize(user)
 
+    # 🧑‍💻 Crear nuevo usuario (ya validado previamente)
     @staticmethod
     def create_user(data):
-        required_fields = ["nombre", "email", "password", "role_id"]
+        try:
+            hashed_pw = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
 
-        for field in required_fields:
-            if not data.get(field):
-                raise ValueError(f"El campo '{field}' es requerido.")
+            new_user = User(
+                nombre=data["nombre"],
+                email=data["email"],
+                password=hashed_pw,
+                role_id=data.get("role_id", 2),
+                profile_picture=data.get("profile_picture")
+            )
 
-        # Continúa normalmente si todo está bien
-        hashed_pw = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
+            db.session.add(new_user)
+            db.session.commit()
+            return new_user
 
-        new_user = User(
-            nombre=data["nombre"],
-            email=data["email"],
-            password=hashed_pw,
-            role_id=data["role_id"]
-        )
-
-        db.session.add(new_user)
-        db.session.commit()
-        return new_user
+        except Exception as e:
+            db.session.rollback()
+            raise APIError(f"Error al crear el usuario: {str(e)}", 500)
 
     @staticmethod
     def delete_user(user_id):
@@ -46,12 +45,12 @@ class UserService:
         db.session.delete(user)
         db.session.commit()
         return True
-    
+
     @staticmethod
     def update_user(user_id, data):
         user = db.session.get(User, user_id)
         if not user:
-            raise ValueError("Usuario no encontrado")
+            raise APIError("Usuario no encontrado", 404)
 
         user.nombre = data.get("nombre", user.nombre)
         user.email = data.get("email", user.email)
@@ -59,8 +58,6 @@ class UserService:
 
         db.session.commit()
         return user
-
-
 
     @staticmethod
     def serialize(user):

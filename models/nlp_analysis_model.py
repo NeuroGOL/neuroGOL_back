@@ -4,7 +4,7 @@ from datetime import datetime
 class NLPAnalysis(db.Model):
     __tablename__ = 'nlp_analysis'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     declaration_id = db.Column(db.Integer, db.ForeignKey('declarations.id'), nullable=False)
     emocion_detectada = db.Column(db.String(50), nullable=False)
     tendencia_emocional = db.Column(db.Text, nullable=False)

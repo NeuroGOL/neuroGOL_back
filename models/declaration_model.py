@@ -4,7 +4,7 @@ from datetime import datetime
 class Declaration(db.Model):
     __tablename__ = 'declarations'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     player_id = db.Column(db.Integer, db.ForeignKey('players.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     categoria_texto = db.Column(db.String(100), nullable=False)

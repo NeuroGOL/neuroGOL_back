@@ -4,9 +4,7 @@ from google.genai import types
 
 # Lista de API keys
 API_KEYS = [
-    "AIzaSyDTx8qSDyzD9Q96FD0jMAb7_npheFIXzE4",
-    "AIzaSyBi_hSKX4FOtf0UH4RhQ7kIpeo5gDj4Qwk",
-    "AIzaSyDNWJngukHKIGkK0JEZqXbiqhnpM41z_vc"
+"AIzaSyA-5Vmny4emPSbJ-a6UJ1Dcp5UfQX-2pOQ",
 ]
 
 def get_random_client():
@@ -15,20 +13,31 @@ def get_random_client():
     return genai.Client(api_key=api_key)
 
 def translate_to_english(text: str) -> str:
-    client = get_random_client()  # Cada vez se usa una key aleatoria
-
     prompt = f"""
-Eres un traductor profesional. Traduce el siguiente texto al inglés de forma precisa, sin explicaciones adicionales ni rodeos. Devuelve **solo el texto traducido**, sin encabezados, sin comillas, sin formato markdown.
+Eres un traductor profesional. Traduce el siguiente texto al inglés de forma precisa, sin explicaciones adicionales ni rodeos. Devuelve **solo el texto traducido**, sin encabezados, sin comillas, sin formato markdown. Si el texto esta en otro idioma que no sea español, tradúcelo igualmente al inglés.
 
 Texto a traducir:
 {text}
 """
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-        )
-        return response.text.strip()
-    except Exception as e:
-        raise RuntimeError(f"Error al traducir el texto: {e}")
+    # Intentar con cada API key
+    for api_key in API_KEYS:
+        client = genai.Client(api_key=api_key)
+        
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+            )
+            return response.text.strip()
+            
+        except Exception as e:
+            error_str = str(e)
+            if '429' in error_str or 'RESOURCE_EXHAUSTED' in error_str:
+                print(f"API key {api_key[:10]}... excedió cuota, probando siguiente...")
+                continue  # Probar siguiente key
+            else:
+                raise RuntimeError(f"Error al traducir el texto: {e}")
+    
+    # Si todas las keys fallaron
+    raise RuntimeError("Todas las API keys han excedido su cuota. Por favor, espera unos minutos.")

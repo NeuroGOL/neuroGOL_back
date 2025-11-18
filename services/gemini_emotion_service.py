@@ -5,7 +5,7 @@ from google.genai import types
 
 # Array de API keys
 API_KEYS = [
-    "AIzaSyAKvaYzQEn9JxBSum090u4mUca6Kpu7_wU",
+    "AIzaSyDYdmZ6yRCyTp1cqHPmcYP6hJfP7vjc0RQ",
 ]
 
 def get_random_client():

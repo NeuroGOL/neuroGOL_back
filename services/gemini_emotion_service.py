@@ -3,11 +3,20 @@ import random
 import google.genai as genai
 from google.genai import types
 
+import os
+import random
 
-# Array de API keys
-API_KEYS = [
-    "AIzaSyAEYfxcX2U-ON6Czo7anluuXf4F1wa4Q7M",
-]
+from services.translation_service import API_KEYS
+
+# Leer la variable de entorno y convertirla en lista
+api_keys = os.getenv("API_KEYS", "").split(",")
+
+# Limpiar espacios en blanco por si acaso
+api_keys = [key.strip() for key in api_keys if key.strip()]
+
+# Ejemplo: elegir una clave aleatoria
+chosen_key = random.choice(api_keys)
+print("Usando API key:", chosen_key)
 
 contexto_emocional = {
   "anger": {

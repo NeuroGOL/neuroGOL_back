@@ -3,10 +3,57 @@ import random
 import google.genai as genai
 from google.genai import types
 
+
 # Array de API keys
 API_KEYS = [
-    "AIzaSyDYdmZ6yRCyTp1cqHPmcYP6hJfP7vjc0RQ",
+    "AIzaSyAEYfxcX2U-ON6Czo7anluuXf4F1wa4Q7M",
 ]
+
+contexto_emocional = {
+  "anger": {
+    "definición": "Irritación o enojo frente a situaciones del juego o decisiones externas.",
+    "impacto_rendimiento": "Puede aumentar la intensidad pero también generar faltas y pérdida de control.",
+    "impacto_equipo": "Riesgo de conflictos internos o sanciones disciplinarias.",
+    "ejemplo": "Estoy molesto porque el árbitro nos perjudicó."
+  },
+  "disgust": {
+    "definición": "Rechazo o desagrado hacia una situación, resultado o comportamiento.",
+    "impacto_rendimiento": "Reduce la motivación y la disposición a colaborar.",
+    "impacto_equipo": "Puede generar apatía y falta de compromiso colectivo.",
+    "ejemplo": "No me gustó cómo jugamos, fue un desastre."
+  },
+  "fear": {
+    "definición": "Sensación de inseguridad o preocupación por el futuro rendimiento.",
+    "impacto_rendimiento": "Disminuye la confianza y puede limitar la toma de riesgos.",
+    "impacto_equipo": "Genera tensión y contagia inseguridad al grupo.",
+    "ejemplo": "Tengo miedo de no estar a la altura en el próximo partido."
+  },
+  "joy": {
+    "definición": "Alegría y satisfacción por logros individuales o colectivos.",
+    "impacto_rendimiento": "Aumenta la motivación y la confianza en el juego.",
+    "impacto_equipo": "Fortalece la cohesión y el ánimo grupal.",
+    "ejemplo": "Estoy feliz con el resultado y cómo jugamos juntos."
+  },
+  "neutral": {
+    "definición": "Estado emocional equilibrado, sin carga positiva ni negativa marcada.",
+    "impacto_rendimiento": "Permite objetividad pero puede reflejar falta de energía.",
+    "impacto_equipo": "Mantiene estabilidad, aunque sin aportar entusiasmo.",
+    "ejemplo": "Fue un partido más, cumplimos lo que se esperaba."
+  },
+  "sadness": {
+    "definición": "Tristeza por derrotas, errores o situaciones personales.",
+    "impacto_rendimiento": "Disminuye la concentración y la energía física.",
+    "impacto_equipo": "Puede contagiar desánimo y reducir la moral colectiva.",
+    "ejemplo": "Me siento muy triste por la derrota, no era lo que esperábamos."
+  },
+  "surprise": {
+    "definición": "Reacción inesperada frente a un resultado o situación imprevista.",
+    "impacto_rendimiento": "Puede generar motivación extra o desconcierto temporal.",
+    "impacto_equipo": "Activa discusiones y reajustes en la estrategia.",
+    "ejemplo": "Me sorprendió el nivel del rival, no lo esperábamos tan fuerte."
+  }
+}
+
 
 def get_random_client():
     """Devuelve un cliente de Gemini con una API key aleatoria"""
@@ -19,15 +66,20 @@ def analyze_with_gemini(texto: str, emocion_detectada: str) -> dict:
     prompt = f"""
 Eres una inteligencia artificial especializada en el análisis emocional de declaraciones realizadas por jugadores de fútbol profesional colombiano (FPC).
 
+Usa el siguiente diccionario de contexto para interpretar mejor las emociones:
+{json.dumps(contexto_emocional, ensure_ascii=False, indent=2)}
+
 Tu tarea es interpretar el siguiente texto para entender el estado emocional del jugador y cómo eso podría impactar su rendimiento deportivo y su entorno grupal:
 
 ---
 "{texto}"
 ---
 
-Ya se ha detectado previamente que la emoción dominante es: "{emocion_detectada}".
+La emoción dominante ya ha sido detectada como: "{emocion_detectada}".  
+**Debes priorizar esta emoción en tu análisis, incluso si aparecen matices de otras emociones.**  
+El diccionario anterior debe servir como referencia obligatoria para tu interpretación.  
 
-Con base en ese contexto, responde de forma precisa y **en formato JSON válido** con los siguientes campos:
+Responde en formato JSON válido con los siguientes campos:
 
 {{
   "tendencia_emocional": "...",

@@ -1,12 +1,35 @@
 
+import os
 import random
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
 # Lista de API keys
-API_KEYS = [
-"AIzaSyAKvaYzQEn9JxBSum090u4mUca6Kpu7_wU",
-]
+# Cargar variables desde .env
+load_dotenv()
+
+# Preferencia: API_KEYS (coma-separados). Si no existe, probar API_KEY único o GEMINI_API_KEY.
+api_keys_env = os.getenv("API_KEYS")
+if api_keys_env:
+    API_KEYS = [k.strip() for k in api_keys_env.split(",") if k.strip()]
+else:
+    single = os.getenv("API_KEY") or os.getenv("GEMINI_API_KEY")
+    if single:
+        API_KEYS = [single.strip()]
+    else:
+        # Buscar claves enumeradas: GEMINI_API_KEY_1, API_KEY_1, ...
+        API_KEYS = []
+        for i in range(1, 21):
+            k = os.getenv(f"GEMINI_API_KEY_{i}") or os.getenv(f"API_KEY_{i}")
+            if k:
+                API_KEYS.append(k.strip())
+
+if not API_KEYS:
+    raise RuntimeError(
+        "No se encontraron API keys. Defina API_KEYS (coma-separados), API_KEY, GEMINI_API_KEY o GEMINI_API_KEY_1..N en su .env"
+    )
+
 
 def get_random_client():
     """Devuelve un cliente de Gemini con una API key aleatoria"""
